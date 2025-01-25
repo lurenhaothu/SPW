@@ -6,7 +6,7 @@ import torchvision
 from PIL import Image
 
 class ComplexSteerablePyramid(torch.nn.Module):
-    def __init__(self, complex=False, N=4, K=12, device='cuda'):
+    def __init__(self, complex=False, N=4, K=4, device='cuda'):
         super(ComplexSteerablePyramid, self).__init__()
         self.N = N
         self.K = K
