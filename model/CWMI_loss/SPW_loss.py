@@ -5,12 +5,13 @@ import math
 from model.CWMI_loss.ComplexSteerablePyramid import ComplexSteerablePyramid
 
 class SPW_loss(torch.nn.Module):
-    def __init__(self, sigma=100., kernel_size=9, beta=2, alpha=0, spN=4, spK=4):
+    def __init__(self, sigma=100., kernel_size=9, beta=2, alpha=0, gamma=1, spN=4, spK=4):
         super(SPW_loss, self).__init__()
         self.gaussian = torchvision.transforms.GaussianBlur(kernel_size=kernel_size, sigma=sigma)
         self.beta = beta
         self.SP = ComplexSteerablePyramid(complex=False, N=spN, K=spK)
         self.alpha = alpha
+        self.gamma = gamma
 
     def fft_upsample_2(self, image: torch.tensor):
         B, C, H, W = image.shape
@@ -43,6 +44,6 @@ class SPW_loss(torch.nn.Module):
     def forward(self, mask, pred, w_map, class_weight, epoch=None):
         mask_weight_map = self.get_map(mask)
         pred_weight_map = self.get_map(pred)
-        weight_map = mask_weight_map + self.alpha * pred_weight_map
-        return -torch.mean((w_map + class_weight[:,1:2,:]) * mask * torch.log(pred + 1e-7)  \
-            + (w_map + class_weight[:,0:1,:]) * (1 - mask) * torch.log(1 - pred + 1e-7))
+        weight_map = self.gamma * (mask_weight_map + self.alpha * pred_weight_map)
+        return -torch.mean((weight_map + class_weight[:,1:2,:]) * mask * torch.log(pred + 1e-7)  \
+            + (weight_map + class_weight[:,0:1,:]) * (1 - mask) * torch.log(1 - pred + 1e-7))
