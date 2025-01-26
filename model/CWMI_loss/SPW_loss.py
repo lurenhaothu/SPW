@@ -42,8 +42,9 @@ class SPW_loss(torch.nn.Module):
         return res
 
     def forward(self, mask, pred, w_map, class_weight, epoch=None):
-        mask_weight_map = self.get_map(mask)
-        pred_weight_map = self.get_map(pred)
+        with torch.no_grad():
+            mask_weight_map = self.get_map(mask)
+            pred_weight_map = self.get_map(pred)
         weight_map = self.gamma * (mask_weight_map + self.alpha * pred_weight_map)
         return -torch.mean((weight_map + class_weight[:,1:2,:]) * mask * torch.log(pred + 1e-7)  \
             + (weight_map + class_weight[:,0:1,:]) * (1 - mask) * torch.log(1 - pred + 1e-7))
