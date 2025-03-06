@@ -115,6 +115,17 @@ class ComplexSteerablePyramid(torch.nn.Module):
             output += torch.sum(fourier_domain[i] * masks['band'][i], dim=2) * masks['high'][i]
         output = output * masks['low'][0] + fourier_domain[0] * masks['high'][0]
         return torch.fft.ifft2(torch.fft.ifftshift(output, dim=(2,3))).real
+    
+    def reconstruct_map(self, image):
+        B, C, H, W = image[0].shape
+        masks = self.get_mask((H, W))
+        fourier_domain = [torch.fft.fftshift(torch.fft.fft2(torch.abs(i)), dim=(-2, -1)) for i in image]
+        output = torch.zeros_like(fourier_domain[-1])
+        for i in range(self.N, 0, -1):
+            output = self.up_sample(output) * masks['low'][i]
+            output += torch.sum(fourier_domain[i] * masks['band'][i], dim=2) * masks['high'][i]
+        output = output * masks['low'][0]# + fourier_domain[0] * masks['high'][0]
+        return torch.fft.ifft2(torch.fft.ifftshift(output, dim=(2,3)))
 
 if __name__ == "__main__":
     a = ComplexSteerablePyramid(N=3, complex=True)
