@@ -1,4 +1,4 @@
-# CWMI
+# SPW loss
 The PyTorch implementation of the CWMI loss proposed in paper: **Steerable Pyramid Weighted Loss: Multi-Scale Adaptive Weighting for Semantic Segmentation**. <br>
 
 ---
@@ -108,5 +108,5 @@ SPW loss does **not** require additional data preparation. However, if you wish 
 
 ### Computational cost
 <p align = "center">
-<img src="figures/Table 3.png">
+<img src="figures/Table 3.PNG">
 </p>
