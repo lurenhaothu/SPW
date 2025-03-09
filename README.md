@@ -87,7 +87,7 @@ SPW loss does **not** require additional data preparation. However, if you wish 
 
 ## Results
 <p align = "center">
-<img src="figures/Table 1.png">
+<img src="figures/Table 1.PNG">
 </p>
 
 ### SNEMI3D
