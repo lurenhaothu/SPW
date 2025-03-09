@@ -1,4 +1,4 @@
-%cd /content/CWMI
+# %cd /content/CWMI
 import torch
 from sklearn.model_selection import KFold
 from model.dataset import Dataset
@@ -18,23 +18,22 @@ from datetime import datetime
 from data.map_gen_ABW import WeightMapLoss
 from model.clDice.clDice import soft_dice_cldice
 from model.rmi.rmi import RMILoss
-from model.CWMI_loss.CWMI_loss import CWMI_loss
+from model.SPW_loss.SPW_loss import SPW_loss
 from plot_result import plot_result
 from model.skea_topo.skea_topo_loss import Skea_topo_loss
 import model.att_unet as models
 
-lossFuncs = [(CWMI_loss(complex=True, spN = 4, spK=12, beta=1, lamb=0.9, mag=1), "")]
+lossFuncs = [((SPW_loss(beta=0.9, lamb=10, pred_map=True)), "")]
 
 model_classes = [models.U_Net]
 
-# dataset_names = ["DRIVE", "GlaS", "mass_road", "SNEMI3D"]
-dataset_names = ["GlaS"]
+dataset_names = ["DRIVE", "GlaS", "SNEMI3D"]
 
 def experiment(dataset_name, model_class, lossFunc, note=''):
 
     val_metric = metrics.miou
 
-    test_metrics = [metrics.miou, metrics.vi, metrics.mdice, metrics.ari, metrics.hausdorff_distance]
+    test_metrics = [metrics.miou, metrics.vi, metrics.mdice, metrics.ari]
 
     batch_size = 10
 
@@ -49,7 +48,7 @@ def experiment(dataset_name, model_class, lossFunc, note=''):
     os.makedirs(curResultDir, exist_ok=True)
 
     load_pretrain = False
-    pretrain_dir_name = "SNEMI3D_BCE_CLassW_val_miou_btchSize_10_2025-01-14-18-43-31"
+    pretrain_dir_name = ""
 
     pretrain_dir = cwd + "/results/" + pretrain_dir_name + "/"
 

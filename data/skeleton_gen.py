@@ -15,6 +15,8 @@ from skimage import morphology
 import matplotlib.pyplot as plt
 from typing import Callable, Iterable, List, Set, Tuple
 
+# copied from https://github.com/clovermini/Skea_topo
+
 
 '''
 For foreground skelenton and background skelenton generate

@@ -10,6 +10,8 @@ from PIL import Image
 import time
 from concurrent.futures import ThreadPoolExecutor
 
+# copied from https://github.com/clovermini/WPU-Net
+
 def get_obj_dis_weight(dis_map, w0=10, eps=1e-20):
     """
     获得前景（晶界）权重图,基于正态分布曲线在[-2.58*sigma, 2.58*sigma]处概率密度为99%
@@ -204,13 +206,13 @@ def map_gen_ABW(dataset_name):
         np.save(map_dir + str(index).zfill(3) + '.npy', w_map)
 
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(save_ABW_map, j) for j in range(100)]
+        futures = [executor.submit(save_ABW_map, j) for j in range(165)]
 
     print(time.time() - t)
 
 
 if __name__ == "__main__":
-    dataset_names = ["GlaS"]
+    dataset_names = ["SNEMI3D", "DRIVE", "GlaS"]
     for dataset_name in dataset_names:
         map_gen_ABW(dataset_name)
     

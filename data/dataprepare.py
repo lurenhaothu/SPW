@@ -168,73 +168,8 @@ def data_prepare_GlaS():
     
     dataset_metadata.to_csv(cwd + "/data/GlaS/dataset_metadata.csv", index=False)
 
-def select_from_mass_road():
-    mask_dir = cwd + "/data/mass_road/mass_road_source/tiff/train_labels/"
-    image_dir = cwd + "/data/mass_road/mass_road_source/tiff/train/"
-    count = []
-    for mask_file_name in os.listdir(mask_dir):
-        if not mask_file_name.endswith(".tif"):
-            continue
-        mask = np.array(Image.open(mask_dir + mask_file_name))
-        image = np.array(Image.open(image_dir + mask_file_name + 'f'))
-        mask_of_blank_region = ((image[:,:,0] == 255) & (image[:,:,1] == 255) & (image[:,:,2] == 255)).astype(int)
-        count.append((np.sum(np.array(mask) * (1 - mask_of_blank_region) / 255), mask_file_name))
-    count.sort(reverse=True)
-    file_list = [file_name for c, file_name in random.sample(count[:300], 120)]
-    file_list_pd = pd.DataFrame({"File_name": file_list})
-    file_list_pd.to_csv(cwd + "/data/mass_road/selected_files.csv", index=False)
-    return file_list
-
-def data_prepare_mass_road(file_list):
-    image_dir = cwd + "/data/mass_road/mass_road_source/tiff/train/"
-    mask_dir = cwd + "/data/mass_road/mass_road_source/tiff/train_labels/"
-
-    images_output_dir = cwd + "/data/mass_road/images/"
-    os.makedirs(images_output_dir, exist_ok=True)
-    masks_output_dir = cwd + "/data/mass_road/masks/"
-    os.makedirs(masks_output_dir, exist_ok=True)
-
-    length = len(file_list)
-
-    imageMean = np.zeros((length, 3))
-    imageStd = np.zeros((length, 3))
-
-    for i in range(length):
-        image = Image.open(image_dir + file_list[i] + 'f')
-        image_np = np.array(image)
-        mask = Image.open(mask_dir + file_list[i])
-        mask_np = np.array(mask)
-
-        H, W, C = image_np.shape
-        pad_H = math.ceil(H / 32) * 32 - H
-        pad_W = math.ceil(W / 32) * 32 - W
-
-        image_np = np.pad(image_np, ((pad_H // 2, pad_H - pad_H // 2), (pad_W // 2, pad_W - pad_W // 2), (0, 0)), mode='edge')
-        mask_np = np.pad(mask_np, ((pad_H // 2, pad_H - pad_H // 2), (pad_W // 2, pad_W - pad_W // 2)), mode='edge')
-
-        imageMean[i, :] = np.mean(image_np / 255, axis=(0, 1))
-        imageStd[i, :] = np.std(image_np / 255, axis=(0, 1))
-
-        Image.fromarray(image_np).save(images_output_dir + str(i).zfill(3) + '.png')
-
-        mask = Image.fromarray((mask_np).astype(np.uint8))
-
-        mask.save(masks_output_dir + str(i).zfill(3) + '.png')
-
-    mean = np.mean(imageMean, axis=0)
-    std = np.sqrt(np.sum(np.power(imageStd, 2) + np.power(imageMean - mean, 2), axis=0) / length)
-    print("finish processing mass_road dataset", " len: ", length, " mean: ", mean, " std: ", std)
-
-    dataset_metadata = pd.DataFrame({"Name": ["mass_road " + c for c in "RGB"], "mean": mean.tolist(), "std": std.tolist()})
-    
-    dataset_metadata.to_csv(cwd + "/data/mass_road/dataset_metadata.csv", index=False)
-
 if __name__ == "__main__":
-    # data_prepare_SNEMI3D()
-    # data_prepare_Drive()
+    data_prepare_SNEMI3D()
+    data_prepare_Drive()
     data_prepare_GlaS()
-    #file_list = select_from_mass_road()
-    #df = pd.read_csv(cwd + "/data/mass_road/selected_files.csv")
-    #file_list = df["File_name"].tolist()
-    #data_prepare_mass_road(file_list)
     pass
