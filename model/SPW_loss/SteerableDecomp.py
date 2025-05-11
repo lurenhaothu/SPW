@@ -49,7 +49,10 @@ class SteerableDecomp(torch.nn.Module):
         alpha_k = 2 ** (self.K - 1) * math.factorial(self.K - 1) / math.sqrt(self.K * math.factorial(2 * (self.K - 1)))
         for k in range(self.K):
             if self.complex:
-                band_filters[k] = 2 * torch.abs(alpha_k * torch.pow(torch.nn.ReLU()(torch.cos(theta - torch.pi * k / self.K)), self.K - 1))
+                band_k = 2 * torch.abs(alpha_k * torch.pow(torch.nn.ReLU()(torch.cos(theta - torch.pi * k / self.K)), self.K - 1))
+                band_k[radius > torch.pi] = 0
+                band_k[radius < torch.pi / 32] = 0
+                band_filters[k] = band_k
             else:
                 band_filters[k] = torch.abs(alpha_k * torch.pow(torch.cos(theta - torch.pi * k / self.K), self.K - 1))
             band_filters[k, H // 2 - 1, W // 2 - 1] = 0
@@ -101,24 +104,50 @@ class SteerableDecomp(torch.nn.Module):
     '''    
 
 if __name__ == "__main__":
-    a = ComplexSteerablePyramid(N=3, complex=True)
-    path = "C:/Users/Renhao Lu/Desktop/dwt/test.jpg"
+    a = SteerableDecomp(K=4, complex=True)
+    # path = "C:/Users/Renhao Lu/Desktop/dwt/test.jpg"
+    path = "C:/Users/Renhao Lu/Desktop/Skea_topo-main/Para/data/masks/001.png"
     imgg = torchvision.transforms.Grayscale(num_output_channels=1)(torchvision.transforms.ToTensor()(Image.open(path)))
     imgg = imgg.unsqueeze(0).cuda()
 
-    output = a(imgg)
+    output = torch.abs(a(imgg))
 
-    for i in output:
-        print(i.shape)
-        print(i.dtype)
+    print(output.shape)
+    print(output.dtype)
 
-    recons = a.reconstruct(output)
+    fourier_domain = torch.fft.fftshift(torch.fft.fft2(imgg))
+
+    print(fourier_domain.shape)
+
+    
+    # recons = a.reconstruct(output)
 
     fig, axe = plt.subplots(2,3)
     axe[0][0].imshow(imgg.cpu().squeeze().numpy())
-    axe[0][1].imshow(recons.real.cpu().squeeze().numpy())
-    axe[0][2].imshow(a.get_mask((400, 400))['high'][1].cpu().squeeze().numpy())
-    axe[1][0].imshow(output[0].real.cpu().squeeze().numpy())
-    axe[1][1].imshow(torch.sum(output[1], dim=2).angle().cpu().squeeze().numpy())
-    axe[1][2].imshow(output[-1].real.cpu().squeeze().numpy())
+    axe[0][1].imshow(torch.log(torch.abs(fourier_domain)).cpu().squeeze().numpy())
+    # axe[0][1].imshow(output[:,:,0,:,:].real.cpu().squeeze().numpy())
+    axe[0][2].imshow(output[:,:,1,:,:].real.cpu().squeeze().numpy())
+    axe[1][0].imshow(output[:,:,2,:,:].real.cpu().squeeze().numpy())
+    axe[1][1].imshow(output[:,:,3,:,:].real.cpu().squeeze().numpy())
+    axe[1][2].imshow(torch.sum(output, dim=2).real.cpu().squeeze().numpy())
     plt.show()
+
+    '''
+    energy = torch.abs(fourier_domain).cpu().squeeze().numpy() ** 2
+    h, w = energy.shape
+    y, x = np.indices((h, w))
+    center = (h // 2, w // 2)
+    r = np.sqrt((x - center[1]) ** 2 + (y - center[0]) ** 2).astype(np.int32)
+
+    # Radial mean
+    r_max = np.max(r)
+    radial_mean = np.bincount(r.ravel(), energy.ravel())#  / np.bincount(r.ravel())
+    
+    plt.plot(radial_mean)
+    plt.title("Radial Energy Distribution")
+    plt.xlabel("Frequency Radius")
+    plt.ylabel("Mean Energy")
+    plt.yscale("log") 
+    plt.grid(True)
+    plt.show()
+    '''

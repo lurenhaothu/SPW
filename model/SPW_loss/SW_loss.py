@@ -24,8 +24,7 @@ class SW_loss(torch.nn.Module):
         with torch.no_grad():
             mask_weight_map = self.get_map(mask)
             pred_weight_map = self.get_map(pred)
-        
-        weight_map = self.lamb * (1 - torch.exp(-((mask_weight_map - pred_weight_map) ** 2) / (2 * self.sigma ** 2)))
+            weight_map = self.lamb * (1 - torch.exp(-((mask_weight_map - pred_weight_map) ** 2) / (2 * self.sigma ** 2)))
         
         return -torch.mean(weight_map * mask * torch.log(pred + 1e-7)  \
             + weight_map * (1 - mask) * torch.log(1 - pred + 1e-7))
