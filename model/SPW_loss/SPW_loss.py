@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 class SPW_loss(torch.nn.Module):
     def __init__(self, spN=4, spK=4, beta=0.9, lamb=10, pred_map=True):
-        super(SPWH_loss, self).__init__()
+        super(SPW_loss, self).__init__()
         self.SP = ComplexSteerablePyramid(complex=True, N=spN, K=spK)
         self.SP_real = ComplexSteerablePyramid(complex=False, N=spN, K=spK)
         self.beta = beta
