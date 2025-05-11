@@ -4,15 +4,18 @@ import torchvision
 import math
 from model.SPW_loss.ComplexSteerablePyramid import ComplexSteerablePyramid
 import matplotlib.pyplot as plt
+import model.loss as loss_functions
 
 class SPW_loss(torch.nn.Module):
-    def __init__(self, spN=4, spK=4, beta=0.9, lamb=10, pred_map=True):
+    def __init__(self, spN=4, spK=4, beta=0.9, lamb=10, sigma=0.2, base_loss="bce"):
         super(SPW_loss, self).__init__()
         self.SP = ComplexSteerablePyramid(complex=True, N=spN, K=spK)
-        self.SP_real = ComplexSteerablePyramid(complex=False, N=spN, K=spK)
+        self.sigma = sigma
         self.beta = beta
         self.lamb = lamb
-        self.pred_map = pred_map
+        self.base_loss = base_loss
+        if self.base_loss == 'dice':
+            self.dice = loss_functions.DiceLoss()
 
     def fft_upsample_2(self, image: torch.tensor):
         B, C, H, W = image.shape
@@ -32,25 +35,27 @@ class SPW_loss(torch.nn.Module):
             image = self.fft_upsample_2(image)
         return image
     
-    def get_map(self, image):
-        B, C, H, W = image.shape
-        sp_decomp = self.SP(image)
+    def get_map(self, mask, pred):
+        B, C, H, W = mask.shape
+        mask_decomp = self.SP(mask)
+        pred_decomp = self.SP(pred)
 
-        res = torch.zeros((B, C, H, W)).to(torch.abs(sp_decomp[1]).dtype).cuda()
+        res = torch.zeros((B, C, H, W)).to(torch.abs(mask_decomp[1]).dtype).cuda()
         for i in range(self.SP.N):
-            i_level_feature = torch.abs(torch.sum(sp_decomp[i + 1], dim=2))
+            i_level_feature = 1 - \
+                torch.exp(-((torch.abs(torch.sum(mask_decomp[i + 1], dim=2)) - torch.abs(torch.sum(pred_decomp[i + 1], dim=2))) ** 2) \
+                          / (2 * self.sigma ** 2))
             res += math.pow(self.beta, i) * self.fft_upsample_n(i_level_feature, i)
         return res
 
     def forward(self, mask, pred, w_map, class_weight, epoch=None):
         with torch.no_grad():
-            mask_weight_map = self.get_map(mask)
-            pred_weight_map = self.get_map(pred)
-        
-        if self.pred_map:
-            weight_map = self.lamb * mask_weight_map
-        else:
-            weight_map = self.lamb * (mask_weight_map + pred_weight_map)
-        return -torch.mean((weight_map + class_weight[:,1:2,:]) * mask * torch.log(pred + 1e-7)  \
-            + (weight_map + class_weight[:,0:1,:]) * (1 - mask) * torch.log(1 - pred + 1e-7))
+            weight_map = self.lamb * self.get_map(mask, pred)
+
+        if self.base_loss == 'bce':
+            return -torch.mean((weight_map + class_weight[:,1:2,:]) * mask * torch.log(pred + 1e-7)  \
+                + (weight_map + class_weight[:,0:1,:]) * (1 - mask) * torch.log(1 - pred + 1e-7))
+        elif self.base_loss == 'dice':
+            return self.dice(mask, pred, w_map, class_weight, epoch) - torch.mean(weight_map * mask * torch.log(pred + 1e-7)  \
+                + weight_map * (1 - mask) * torch.log(1 - pred + 1e-7))
 
