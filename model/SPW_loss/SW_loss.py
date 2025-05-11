@@ -16,7 +16,7 @@ class SW_loss(torch.nn.Module):
     
     def get_map(self, image):
         B, C, H, W = image.shape
-        sp_decomp = self.SP(image)
+        sp_decomp = self.SP(image).real
 
         return torch.sum(sp_decomp, dim=2)
 

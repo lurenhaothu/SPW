@@ -55,8 +55,8 @@ class SteerableDecomp(torch.nn.Module):
             band_filters[k, H // 2 - 1, W // 2 - 1] = 0
         #band_filters.append(band_i.to(self.device))
 
-        self.masks[image_size] = band_filters
-        return band_filters
+        self.masks[image_size] = band_filters.to(self.device)
+        return self.masks[image_size]
     
     def forward(self, batch_images):
         B, C, H, W = batch_images.shape
