@@ -42,9 +42,10 @@ class SPW_loss(torch.nn.Module):
 
         res = torch.zeros((B, C, H, W)).to(torch.abs(mask_decomp[1]).dtype).cuda()
         for i in range(self.SP.N):
-            i_level_feature = 1 - \
-                torch.exp(-((torch.abs(torch.sum(mask_decomp[i + 1], dim=2)) - torch.abs(torch.sum(pred_decomp[i + 1], dim=2))) ** 2) \
-                          / (2 * self.sigma ** 2))
+            #i_level_feature = 1 - \
+            #    torch.exp(-((torch.abs(torch.sum(mask_decomp[i + 1], dim=2)) - torch.abs(torch.sum(pred_decomp[i + 1], dim=2))) ** 2) \
+            #              / (2 * self.sigma ** 2))
+            i_level_feature = torch.sum(torch.abs(mask_decomp[i+1]), dim=2) + torch.sum(torch.abs(pred_decomp[i+1]), dim=2)
             res += math.pow(self.beta, i) * self.fft_upsample_n(i_level_feature, i)
         return res
 
