@@ -1,5 +1,5 @@
 # SPW loss
-The PyTorch implementation of the CWMI loss proposed in paper: **Steerable Pyramid Weighted Loss: Multi-Scale Adaptive Weighting for Semantic Segmentation**. <br>
+The PyTorch implementation of the SPW loss proposed in paper: **Steerable Pyramid Weighted Loss: Multi-Scale Adaptive Weighting for Semantic Segmentation**. <br>
 
 ---
 
