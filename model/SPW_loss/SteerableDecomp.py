@@ -1,17 +1,18 @@
 import numpy as np
 import torch
+from model.device import get_device
 import matplotlib.pyplot as plt
 import math
 import torchvision
 from PIL import Image
 
 class SteerableDecomp(torch.nn.Module):
-    def __init__(self, complex=True, K=4, device='cuda'):
+    def __init__(self, complex=True, K=4, device=None):
         super(SteerableDecomp, self).__init__()
         self.K = K
         self.complex = complex
         self.masks = {}
-        self.device = device
+        self.device = device if device is not None else get_device()
 
     def get_grid(self, H, W):
         x = torch.linspace(-(H // 2 - 1) * np.pi / (H // 2), np.pi, H)
@@ -108,7 +109,7 @@ if __name__ == "__main__":
     # path = "C:/Users/Renhao Lu/Desktop/dwt/test.jpg"
     path = "C:/Users/Renhao Lu/Desktop/Skea_topo-main/Para/data/masks/001.png"
     imgg = torchvision.transforms.Grayscale(num_output_channels=1)(torchvision.transforms.ToTensor()(Image.open(path)))
-    imgg = imgg.unsqueeze(0).cuda()
+    imgg = imgg.unsqueeze(0).to(a.device)
 
     output = torch.abs(a(imgg))
 

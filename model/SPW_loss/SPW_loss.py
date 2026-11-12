@@ -23,7 +23,7 @@ class SPW_loss(torch.nn.Module):
         f = torch.fft.rfft2(image, dim=(-2, -1))
         B, C, FH, FW = f.shape
 
-        newf = torch.zeros((B, C, 2 * H, W + 1)).to(torch.cfloat).cuda()
+        newf = torch.zeros((B, C, 2 * H, W + 1), dtype=torch.cfloat, device=image.device)
         newf[:,:,:H // 2, :FW] = f[:,:,:H//2,:]
         newf[:,:, -H//2:, :FW] = f[:,:,-H//2:,:]
 
@@ -40,7 +40,7 @@ class SPW_loss(torch.nn.Module):
         mask_decomp = self.SP(mask)
         pred_decomp = self.SP(pred)
 
-        res = torch.zeros((B, C, H, W)).to(torch.abs(mask_decomp[1]).dtype).cuda()
+        res = torch.zeros((B, C, H, W), dtype=torch.abs(mask_decomp[1]).dtype, device=mask.device)
         for i in range(self.SP.N):
             #i_level_feature = 1 - \
             #    torch.exp(-((torch.abs(torch.sum(mask_decomp[i + 1], dim=2)) - torch.abs(torch.sum(pred_decomp[i + 1], dim=2))) ** 2) \
@@ -54,8 +54,8 @@ class SPW_loss(torch.nn.Module):
             weight_map = self.lamb * self.get_map(mask, pred)
 
         if self.base_loss == 'bce':
-            return -torch.mean((weight_map + class_weight[:,1:2,:]) * mask * torch.log(pred + 1e-7)  \
-                + (weight_map + class_weight[:,0:1,:]) * (1 - mask) * torch.log(1 - pred + 1e-7))
+            return -torch.mean((weight_map + class_weight[:,1:2,:,None]) * mask * torch.log(pred + 1e-7)  \
+                + (weight_map + class_weight[:,0:1,:,None]) * (1 - mask) * torch.log(1 - pred + 1e-7))
         elif self.base_loss == 'dice':
             return self.dice(mask, pred, w_map, class_weight, epoch) - torch.mean(weight_map * mask * torch.log(pred + 1e-7)  \
                 + weight_map * (1 - mask) * torch.log(1 - pred + 1e-7))

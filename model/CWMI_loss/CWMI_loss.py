@@ -58,11 +58,11 @@ class CWMI_loss(torch.nn.Module):
 
     def real_mi(self, mask, pred):
         B, C, A, H, W = mask.shape # A: angle, number of orientations of the steerable pyramid
-        mask_flat = mask.view(B, C, A, H * W).type(torch.cuda.DoubleTensor)
+        mask_flat = mask.view(B, C, A, H * W).to(torch.float64)
         mask_mean = torch.mean(mask_flat, dim=3, keepdim=True)
         mask_centered = mask_flat - mask_mean
 
-        pred_flat = pred.view(B, C, A, H * W).type(torch.cuda.DoubleTensor)
+        pred_flat = pred.view(B, C, A, H * W).to(torch.float64)
         pred_mean = torch.mean(pred_flat, dim=3, keepdim=True)
         pred_centered = pred_flat - pred_mean
 

@@ -106,7 +106,7 @@ class WeightMapLoss(nn.Module):
         # Dilate Coefficient of Mask
         self._dilate_cof = _dilate_cof
         # class balance weight, which is adjusted according to the dilate coefficient. The dilate coefficient can be 1, 3, 5, 7, 9 ....
-        self._weight_cof = torch.Tensor([_dilate_cof, 20]).cuda()
+        self._weight_cof = torch.Tensor([_dilate_cof, 20])
     
     def _calculate_maps(self, mask, weight_maps, method):
         if -1 < method <= 6:  # WCE  LOSS
@@ -158,8 +158,9 @@ class WeightMapLoss(nn.Module):
         method：Select the type of loss function
         """
         mask = target
+        self._weight_cof = self._weight_cof.to(target.device)
 
-        dilation_kernel = torch.ones((1,1,3,3)).cuda()
+        dilation_kernel = torch.ones((1,1,3,3), device=target.device)
         for i in range(iteration):
             mask = torch.clamp(torch.nn.functional.conv2d(mask, dilation_kernel, padding=1), 0., 1.)
         mask = target.float()

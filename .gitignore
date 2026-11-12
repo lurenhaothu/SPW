@@ -1,0 +1,8 @@
+env/
+results/
+*.py[cod]
+*.zip
+data/DRIVE/
+data/GlaS/
+data/SNEMI3D
+data/mass_road

@@ -1,18 +1,19 @@
 import numpy as np
 import torch
+from model.device import get_device
 import matplotlib.pyplot as plt
 import math
 import torchvision
 from PIL import Image
 
 class ComplexSteerablePyramid(torch.nn.Module):
-    def __init__(self, complex=False, N=4, K=12, device='cuda'):
+    def __init__(self, complex=False, N=4, K=12, device=None):
         super(ComplexSteerablePyramid, self).__init__()
         self.N = N
         self.K = K
         self.complex = complex
         self.masks = {}
-        self.device = device
+        self.device = device if device is not None else get_device()
 
     def get_grid(self, H, W):
         x = torch.linspace(-(H // 2 - 1) * np.pi / (H // 2), np.pi, H)

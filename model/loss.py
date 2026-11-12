@@ -12,7 +12,7 @@ class BCE_withClassBalance(torch.nn.Module):
         super(BCE_withClassBalance, self).__init__()
 
     def forward(self, mask, pred, w_map, class_weight, epoch=None): #20570595.0 84287005.0
-        return torch.mean(- class_weight[:,1:2,:] * mask * torch.log(pred + 1e-7) - class_weight[:,0:1,:] * (1 - mask) * torch.log(1 - pred + 1e-7))
+        return torch.mean(- class_weight[:,1:2,:,None] * mask * torch.log(pred + 1e-7) - class_weight[:,0:1,:,None] * (1 - mask) * torch.log(1 - pred + 1e-7))
 
 class DiceLoss(torch.nn.Module):
     # arXiv:1606.04797v1
@@ -67,8 +67,8 @@ class FocalLoss(torch.nn.Module):
         self.gamma = gamma
 
     def forward(self, mask, pred, w_map, class_weight, epoch=None):
-        return -torch.mean(class_weight[:,1:2,:] * mask * torch.pow(1 - pred, self.gamma) * torch.log(pred + 1e-7) +
-                          class_weight[:,0:1,:] * (1 - mask) * torch.pow(pred, self.gamma) * torch.log(1 - pred + 1e-7))
+        return -torch.mean(class_weight[:,1:2,:,None] * mask * torch.pow(1 - pred, self.gamma) * torch.log(pred + 1e-7) +
+                          class_weight[:,0:1,:,None] * (1 - mask) * torch.pow(pred, self.gamma) * torch.log(1 - pred + 1e-7))
 
 
 class Unet_Weight_BCE(torch.nn.Module):
@@ -76,7 +76,7 @@ class Unet_Weight_BCE(torch.nn.Module):
         super(Unet_Weight_BCE, self).__init__()
 
     def forward(self, mask, pred, w_map, class_weight, epoch=None):
-        return torch.mean(- (w_map + class_weight[:,1:2,:]) * mask * torch.log(pred + 1e-7) - class_weight[:,0:1,:] * (1 - mask) * torch.log(1 - pred + 1e-7))
+        return torch.mean(- (w_map + class_weight[:,1:2,:,None]) * mask * torch.log(pred + 1e-7) - class_weight[:,0:1,:,None] * (1 - mask) * torch.log(1 - pred + 1e-7))
     
 class Weight_Map_BCE(torch.nn.Module):
     def __init__(self):
@@ -84,9 +84,9 @@ class Weight_Map_BCE(torch.nn.Module):
 
     def forward(self, mask, pred, w_map, class_weight, epoch=None):
         if w_map != None:
-            return torch.mean(- (w_map + class_weight[:,1:2,:]) * mask * torch.log(pred + 1e-7) - (w_map + class_weight[:,0:1,:]) * (1 - mask) * torch.log(1 - pred + 1e-7))
+            return torch.mean(- (w_map + class_weight[:,1:2,:,None]) * mask * torch.log(pred + 1e-7) - (w_map + class_weight[:,0:1,:,None]) * (1 - mask) * torch.log(1 - pred + 1e-7))
         else:
-            return torch.mean(- class_weight[:,1:2,:] * mask * torch.log(pred + 1e-7) - class_weight[:,0:1,:] * (1 - mask) * torch.log(1 - pred + 1e-7))
+            return torch.mean(- class_weight[:,1:2,:,None] * mask * torch.log(pred + 1e-7) - class_weight[:,0:1,:,None] * (1 - mask) * torch.log(1 - pred + 1e-7))
 
 
 

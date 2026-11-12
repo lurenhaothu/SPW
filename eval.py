@@ -14,6 +14,9 @@ import model.loss as loss
 import time
 from concurrent.futures import ThreadPoolExecutor
 import model.att_unet as models
+from model.device import get_device
+
+device = get_device()
 
 experiment_names = [
                     ]
@@ -46,10 +49,10 @@ def test_experiment(experiment_name):
 
         unet = model(img_ch=3, output_ch=2)
 
-        unet.cuda()
+        unet.to(device)
 
         #test
-        best_state_dict = torch.load(curResultDir + "fold_" + str(fold) + "_best_model_state.pth")
+        best_state_dict = torch.load(curResultDir + "fold_" + str(fold) + "_best_model_state.pth", map_location=device)
         unet.load_state_dict(best_state_dict)
         unet.eval()
 
@@ -61,7 +64,7 @@ def test_experiment(experiment_name):
         for index, (image, mask, w_map, class_weight) in enumerate(test_dataloader):
             unet.eval()
             with torch.no_grad():
-                pred = torch.softmax(unet(image.cuda()), 1)[:, 1:2, :, :]
+                pred = torch.softmax(unet(image.to(device)), 1)[:, 1:2, :, :]
                 # pred = torch.softmax(unet(image.cuda()), 1)
                 # pred = pred.max(1)[1].data
                 images_test.append(image.squeeze().numpy())
